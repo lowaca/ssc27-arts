@@ -25,7 +25,7 @@ jobs:
 
       - name: Install Playwright and Browser Dependencies
         run: |
-          npx playwright install --with-deps chromium
+          python -m playwright install --with-deps chromium
 
       - name: Run Chorcha Quiz Bot
         env:
@@ -42,4 +42,3 @@ jobs:
           HEADLESS: 'true'
         run: |
           python bot.py
-
