@@ -449,7 +449,7 @@ class ChorchaQuizBot:
             page.screenshot(path=homepage_screenshot)
             self.collected_screenshots.append((homepage_screenshot, "Dashboard Homepage"))
             
-            streak_selector = ".text-sm.py-1.px-3.cursor-pointer, [class*='text-sm py-1 px-3 cursor-pointer']"
+            streak_selector = 'button:has(img[src*="fire.svg"]), [class*="cursor-pointer"]:has(img[src*="fire.svg"]), img[src*="fire.svg"]'
             streak_target = page.locator(streak_selector).first
             
             if streak_target.is_visible():
