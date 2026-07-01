@@ -534,8 +534,15 @@ class ChorchaQuizBot:
                         if is_credentials_configured and self.perform_login(page, context):
                             continue
                         raise RuntimeError("COOKIE_EXPIRED: Chorcha auth cookie has expired or login issue detected.")
-                    target_selector = 'main h3, button:has-text("লগইন"), button:has-text("Login"), a:has-text("লগইন"), a:has-text("Login")'
+                    target_selector = 'button:has-text("দ্রুত প্র্যাকটিস"), main h3, button:has-text("লগইন"), button:has-text("Login"), a:has-text("লগইন"), a:has-text("Login")'
                     page.locator(target_selector).first.wait_for(state="visible", timeout=20000)
+                    
+                    # Click the 'দ্রুত প্র্যাকটিস' tab toggle at the top if visible to load the correct subjects
+                    quick_practice_tab = page.locator('button:has-text("দ্রুত প্র্যাকটিস")').first
+                    if quick_practice_tab.is_visible():
+                        logger.info("Clicking the 'দ্রুত প্র্যাকটিস' tab to load practice topics.")
+                        quick_practice_tab.click()
+                        page.wait_for_timeout(1000)
                 except Exception as ex:
                     if "COOKIE_EXPIRED" in str(ex):
                         raise ex
@@ -600,7 +607,7 @@ class ChorchaQuizBot:
                 subject_btn.click()
                 
                 # Paper Sub-Selection Strategy Validation Layer
-                try: page.locator('main h2').wait_for(state="visible", timeout=6000)
+                try: page.locator('main h3').first.wait_for(state="visible", timeout=6000)
                 except: failed_subjects.add(chosen_title); continue
                 
                 chapter_nodes = page.locator('main h3').all()
@@ -639,6 +646,14 @@ class ChorchaQuizBot:
                 logger.info(f"Target node connection lock verified on entry text: '{target_text}'")
                 target_node.scroll_into_view_if_needed()
                 target_node.click()
+                
+                # Handle Chorcha Cup team selection modal if it appears
+                page.wait_for_timeout(1000)
+                team_modal_later = page.locator('button:has-text("এখন না, পরে খেলবো")')
+                if team_modal_later.is_visible():
+                    logger.info("Chorcha Cup modal detected. Clicking 'এখন না, পরে খেলবো'.")
+                    team_modal_later.click()
+                    page.wait_for_timeout(1000)
                 
                 # Engagement Action Process Launch Sequence
                 quick_practice_action = page.locator('button:has-text("দ্রুত প্র্যাকটিস")')
