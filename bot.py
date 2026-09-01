@@ -271,11 +271,13 @@ class ChorchaQuizBot:
 
     def intercept_exam_payloads(self, response: Response):
         """Asynchronous API Listener targeting backend structural configurations."""
-        if "mujib.chorcha.net/exam/quick" in response.url and response.request.method == "POST":
+        if "exam" in response.url:
+            logger.info(f"Exam Response Intercepted: {response.url} (Method: {response.request.method})")
+        if ("exam/quick" in response.url or "/exam" in response.url) and response.request.method == "POST":
             logger.info("Fired API Target Catch: Intercepted internal exam schema packet.")
             x_chorcha_id = response.headers.get("x-chorcha-id")
             if not x_chorcha_id:
-                logger.info("Anomaly: Found verification target block missing structural validation hash header.")
+                logger.info(f"Anomaly: Found verification target block missing structural validation hash header. Headers: {list(response.headers.keys())}")
                 return
             try:
                 payload = response.json()
