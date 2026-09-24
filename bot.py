@@ -72,6 +72,10 @@ class ChorchaQuizBot:
         
         is_cookie_expired = error_msg and "COOKIE_EXPIRED" in error_msg
         
+        if not self.telegram_token or "xxxx" in self.telegram_token.lower() or not self.chat_id or "xxxx" in self.chat_id.lower():
+            logger.info("Telegram bot credentials not configured or placeholder. Skipping Telegram dispatch.")
+            return
+        
         # Beautiful layout design tokens
         header_line = "🏆 <b>C H O R C H A   A U T O - E X A M</b> 🏆\n"
         divider = "───────────────────────────\n"
@@ -687,9 +691,22 @@ class ChorchaQuizBot:
                         logger.info("Action button 'দ্রুত প্র্যাকটিস' is disabled. Attempting force click...")
                         quick_practice_action.click(force=True)
                     
-                    # Wait up to 8 seconds dynamically for correct_options to populate
+                    # If confirmation modal appeared with 'এগিয়ে যাও', select quick practice and click proceed
+                    page.wait_for_timeout(1000)
+                    qp_modal_card = page.locator('div, button').filter(has_text="দ্রুত প্র্যাকটিস").last
+                    if qp_modal_card.is_visible():
+                        try:
+                            qp_modal_card.click()
+                        except: pass
+                    
+                    proceed_btn = page.locator('button:has-text("এগিয়ে যাও"), button:has-text("এগিয়ে যাও")')
+                    if proceed_btn.is_visible():
+                        logger.info("Confirmation modal detected. Clicking 'এগিয়ে যাও' to start quiz...")
+                        proceed_btn.click()
+                    
+                    # Wait up to 10 seconds dynamically for correct_options to populate
                     start_time = time.time()
-                    while not self.correct_options and (time.time() - start_time) < 8.0:
+                    while not self.correct_options and (time.time() - start_time) < 10.0:
                         page.wait_for_timeout(100)
                     
                     if self.correct_options:
@@ -718,14 +735,10 @@ class ChorchaQuizBot:
             logger.info("Quiz matrix pipeline fully live. Executing automated responses maps dynamically...")
             consecutive_wait_ticks = 0
             
+            # Wait for quiz questions container to load
+            page.wait_for_selector('button.rounded-xl.border', timeout=15000)
+            
             while True:
-                skip_gate = page.locator('button:has-text("স্কিপ করো")')
-                advance_gate = page.locator('button:has-text("এগিয়ে যাও")')
-                
-                if skip_gate.is_visible() or advance_gate.is_visible():
-                    logger.info("Final target metrics dashboard threshold reached safely. Breaking dynamic solution injection tracking loop.")
-                    break
-                    
                 option_nodes = page.locator('button.rounded-xl.border')
                 if option_nodes.count() > 0:
                     consecutive_wait_ticks = 0
@@ -738,7 +751,7 @@ class ChorchaQuizBot:
                         actual_node_count = option_nodes.count()
                         logger.info(f"Executing noise profile injection logic rules matrix over index tracking item: [{self.question_count}]")
                         target_selection_index = (target_selection_index + 1) % (actual_node_count if actual_node_count > 0 else 4)
-                        
+                    
                     if target_selection_index >= option_nodes.count():
                         target_selection_index = 0
                         
@@ -756,8 +769,13 @@ class ChorchaQuizBot:
                         next_item_trigger.wait_for(state="hidden", timeout=2000)
                     except: pass
                     
-                    page.wait_for_timeout(200)
+                    page.wait_for_timeout(300)
                 else:
+                    skip_gate = page.locator('button:has-text("স্কিপ করো"), button:has-text("স্কিপ কর")')
+                    advance_gate = page.locator('button:has-text("এগিয়ে যাও"), button:has-text("এগিয়ে যাও")')
+                    if skip_gate.is_visible() or advance_gate.is_visible():
+                        logger.info("Final target metrics dashboard threshold reached safely. Breaking dynamic solution injection tracking loop.")
+                        break
                     page.wait_for_timeout(1000)
                     consecutive_wait_ticks += 1
                     if consecutive_wait_ticks >= 12:
